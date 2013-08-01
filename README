@@ -1,0 +1,25 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=4679
+
+Use the http://github.com/biskark/vim-ultimate-colorscheme-utility page for more current releases.
+
+Features
+========
+Ultimate Colorscheme Utility offers several features for customizing your colorscheme preferences.
+- Allows for easy browsing of all installed colorschemes,
+  see the awesome archive at https://github.com/flazz/vim-colorschemes for a ton of colorschemes.
+- Allows saving favorite colorschemes for all vim, or for specific filetypes.
+- Enables automatic switching of colorschemes when switching fietype buffers so that a favorite scheme is always on.
+
+Quick Usage
+===========
+Note: This is not a complete list and all mappings are customizable, view the helptags for more information.
+
+<leader><leader>a    " Adds the current colorscheme to favorites
+<leader><leader>A    " Removes the current colorscheme from favorites
+<leader><leader>f     " Goes to next colorscheme in favorites
+<leader><leader>F    " Goes to previous colorscheme in favorites
+<leader><leader>g    " Goes to next colorscheme in global favorites
+<leader><leader>G    " Goes to previous colorscheme in global favorites
+<leader><leader>n    " Goes to next colorscheme in all colors
+<leader><leader>N    " Goes to previous colorscheme in all colors
+<leader><leader>q    " Views all favorites
