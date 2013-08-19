@@ -1,6 +1,16 @@
 This is a mirror of http://www.vim.org/scripts/script.php?script_id=4679
 
 Use the http://github.com/biskark/vim-ultimate-colorscheme-utility page for more current releases.
+If you have and questions, comments, or new feature ideas, you can contact me at biskark@gmail.com
+
+New Features
+===========
+Menu Integration
+
+Ultimate Colorscheme Utility is now working on better integration into GVim. There is now a 'Favorites' menu that enables all the functionality of the plugin at the push of a button.
+Excluded Filetypes
+
+Now you can specify which filetypes Ultimate Colorscheme Utility can ignore for even more customizability.
 
 Features
 ========
@@ -9,6 +19,7 @@ Ultimate Colorscheme Utility offers several features for customizing your colors
   see the awesome archive at https://github.com/flazz/vim-colorschemes for a ton of colorschemes.
 - Allows saving favorite colorschemes for all vim, or for specific filetypes.
 - Enables automatic switching of colorschemes when switching fietype buffers so that a favorite scheme is always on.
+- NEW: Allows for the saving of favorite fonts when using GVim.
 
 Quick Usage
 ===========
@@ -22,4 +33,12 @@ Note: This is not a complete list and all mappings are customizable, view the he
 <leader><leader>G    " Goes to previous colorscheme in global favorites
 <leader><leader>n    " Goes to next colorscheme in all colors
 <leader><leader>N    " Goes to previous colorscheme in all colors
+
+<leader><leader>t     " Adds the current font to favorites
+<leader><leader>T    " Removes the current font from favorites
+<leader><leader>e    " Goes to the next font in filetype specific favorites
+<leader><leader>E    " Goes to the previous font in filetype specific favorites
+<leader><leader>r     " Goes to the next font in global favorites
+<leader><leader>R   " Goes to the previous font in global favorites
+
 <leader><leader>q    " Views all favorites
