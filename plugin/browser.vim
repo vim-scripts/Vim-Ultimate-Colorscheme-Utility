@@ -1,6 +1,6 @@
 " File: browser.vim
 " Author: Kevin Biskar
-" Version: 0.2.0
+" Version: 0.2.0a
 "
 " Plugin that allows for easy browsing of different installed colorschemes.
 " Also allows for the global or filetype based favorites that enables 
@@ -187,34 +187,36 @@ if exists('g:ulti_color_See_Fav')
 endif
 
 " Font mappings
-if exists('g:ulti_color_Font_Add_Fav')
-    exec 'nnoremap ' . g:ulti_color_Font_Add_Fav .
-                \ ' :call <SID>AddFontFavorite()<cr>'
-endif
+if has('gui_running')
+    if exists('g:ulti_color_Font_Add_Fav')
+        exec 'nnoremap ' . g:ulti_color_Font_Add_Fav .
+                    \ ' :call <SID>AddFontFavorite()<cr>'
+    endif
 
-if exists('g:ulti_color_Font_Remove_Fav')
-    exec 'nnoremap ' . g:ulti_color_Font_Remove_Fav .
-                \ ' :call <SID>RemoveFontFavorite()<cr>'
-endif
+    if exists('g:ulti_color_Font_Remove_Fav')
+        exec 'nnoremap ' . g:ulti_color_Font_Remove_Fav .
+                    \ ' :call <SID>RemoveFontFavorite()<cr>'
+    endif
 
-if exists('g:ulti_color_Font_Next_Fav')
-    exec 'nnoremap ' . g:ulti_color_Font_Next_Fav . 
-                \ ' :call <SID>CycleFontFileFavorites(1)<cr>'
-endif
+    if exists('g:ulti_color_Font_Next_Fav')
+        exec 'nnoremap ' . g:ulti_color_Font_Next_Fav . 
+                    \ ' :call <SID>CycleFontFileFavorites(1)<cr>'
+    endif
 
-if exists('g:ulti_color_Font_Prev_Fav')
-    exec 'nnoremap ' . g:ulti_color_Font_Prev_Fav . 
-                \ ' :call <SID>CycleFontFileFavorites(-1)<cr>'
-endif
+    if exists('g:ulti_color_Font_Prev_Fav')
+        exec 'nnoremap ' . g:ulti_color_Font_Prev_Fav . 
+                    \ ' :call <SID>CycleFontFileFavorites(-1)<cr>'
+    endif
 
-if exists('g:ulti_color_Font_Next_Global_Fav')
-    exec 'nnoremap ' . g:ulti_color_Font_Next_Global_Fav . 
-                \ ' :call <SID>CycleFontGlobalFavorites(1)<cr>'
-endif
+    if exists('g:ulti_color_Font_Next_Global_Fav')
+        exec 'nnoremap ' . g:ulti_color_Font_Next_Global_Fav . 
+                    \ ' :call <SID>CycleFontGlobalFavorites(1)<cr>'
+    endif
 
-if exists('g:ulti_color_Font_Prev_Global_Fav')
-    exec 'nnoremap ' . g:ulti_color_Font_Prev_Global_Fav . 
-                \ ' :call <SID>CycleFontGlobalFavorites(-1)<cr>'
+    if exists('g:ulti_color_Font_Prev_Global_Fav')
+        exec 'nnoremap ' . g:ulti_color_Font_Prev_Global_Fav . 
+                    \ ' :call <SID>CycleFontGlobalFavorites(-1)<cr>'
+    endif
 endif
 
 " END Assign Functions }}}
@@ -260,7 +262,7 @@ function! s:CycleAll(step)
     endif
 
     if len(s:all_colors) == 0
-        call <SID>GetAllColors()'
+        call <SID>GetAllColors()
     endif
     " If it's STILL 0, you have a problem. Check your installed colorschemes.
     if len(s:all_colors) == 0
