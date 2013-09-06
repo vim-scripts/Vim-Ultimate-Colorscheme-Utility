@@ -1,6 +1,6 @@
 " File: browser.vim
 " Author: Kevin Biskar
-" Version: 0.2.0a
+" Version: 0.2.2
 "
 " Plugin that allows for easy browsing of different installed colorschemes.
 " Also allows for the global or filetype based favorites that enables 
@@ -66,6 +66,15 @@ endif
 " Enable the font favorites feature.
 if !exists('g:ulti_color_font_enable')
     let g:ulti_color_font_enable = 1
+endif
+
+" Enable modifying the GVim menus.
+if !exists('g:ulti_color_gui_menu')
+    let g:ulti_color_gui_menu = 1
+endif
+
+if !exists('g:ulti_color_excluded')
+    let g:ulti_color_excluded = ['minibufexpl']
 endif
 " END Global Variables }}}
 
@@ -231,6 +240,7 @@ let s:font_data_loaded = 0
 let s:data_file = expand('<sfile>:p:r') . '.csv'
 let s:font_data_file = expand('<sfile>:p:h') . '/font.csv'
 let s:default_file = expand('<sfile>:p:h') . '/default.csv'
+let s:old_filetype = ''
 " END script variables }}}
 
 " Script Functions {{{
@@ -310,6 +320,9 @@ function! s:CycleFileFavorites(step, ...)
     " If filetype explicitly ignored
     if g:ulti_color_filetype == 0 || (a:0 == 1 && a:1 == 1)
         let filetype = 'global'
+    " Filetype in excluded
+    elseif index(g:ulti_color_excluded, filetype) >= 0
+        let filetype = 'global'
     " If no favorites for filetype
     elseif !has_key(s:favorites, filetype) || len(s:favorites[filetype]) == 0
         let filetype = 'global'
@@ -364,10 +377,11 @@ function! s:AddFavorite()
         return -1
     endif
     let name = g:colors_name
+    " Adds to filetype favorites
     if g:ulti_color_filetype
-        " Adds to filetype favorites
         let ft = &filetype
-        if ft !=# ''
+        " Doesn't trigger if 'no ft' or filetype is specifically excluded
+        if ft !=# '' && index(g:ulti_color_excluded, ft) == -1
             if !has_key(s:favorites, ft)
                 let s:favorites[ft] = []
             endif
@@ -385,6 +399,7 @@ function! s:AddFavorite()
         endif
     endif
 
+    " Adds to global favorites
     if !has_key(s:favorites, 'global')
         let s:favorites['global'] = []
     endif
@@ -531,16 +546,21 @@ endfunction
 " s:SetFavorite() {{{
 " Function that detects filetype and sets the colorscheme to a preferred color
 " for that filetype. On startup, g:colors_name may not be set, so checks for
-" that to.
+" that to. Called only when always_random is set to 0.
 function! s:SetFavorite()
     let ft = &filetype
     if !exists('g:colors_name')
         let g:colors_name = 'default'
     endif
+    " If ... filetype in dictionary, the current scheme isn't in those
+    " favorites, the filetype is not excluded specifically, and the filetype
+    " has at least one stored favorite.
     if (has_key(s:favorites, ft) && 
                 \ index(s:favorites[ft], g:colors_name) == -1 &&
                 \ len(s:favorites[ft]) > 0)
         call <SID>RandomFavorite()
+    " If ... global in dictionary, the current scheme isn't in it, and
+    " favorites has at least one stored.
     elseif has_key(s:favorites, 'global') && 
                 \ index(s:favorites['global'], g:colors_name) == -1 &&
                 \ len(s:favorites['global']) > 0
@@ -555,7 +575,8 @@ endfunction
 " set, returns -1.
 function! s:RandomFavorite()
     let ft = &filetype
-    if g:ulti_color_filetype == 0 || has_key(s:favorites, ft) == 0 ||
+    if g:ulti_color_filetype == 0 ||
+                \ has_key(s:favorites, ft) == 0 ||
                 \ len(s:favorites[ft]) == 0
         if len(s:favorites['global']) == 0
             return -1
@@ -578,6 +599,36 @@ function! s:RandomFavorite()
     return 0
 endfunction
 " END RandomFavorite }}}
+
+" s:SituationalRandomFavorite() {{{
+" Function that randomnly chooses a favorite for the selected filetype or
+" chooses a random global if no normal filetype exists IF the new filetype is
+" not the same as the old filetype. If no global favorites set, returns -1 via
+" the call to RandomFavorite()
+function! s:SituationalRandomFavorite()
+    let ft = &filetype
+    let retval = 0
+    let is_first_time = 0
+    " Initialize at startup on infrequent or unfavorited filetypes
+    if s:old_filetype ==# ''
+        let retval = s:RandomFavorite()
+        let is_first_time = 1
+    endif
+    " If current ft is the same as the last one, if current ft is considered
+    " blank, or if it is excluded by user
+    if ft ==# s:old_filetype ||
+                \ ft ==# '' ||
+                \ index(g:ulti_color_excluded, ft) >= 0
+        return retval
+    else
+        let s:old_filetype = ft
+        if is_first_time
+            return retval
+        else
+            return s:RandomFavorite()
+    endif
+endfunction
+" END SituationalRandomFavorite }}}
 
 " s:LoadFontFavorites() {{{
 " Function that reads font favorites from plugin directory.
@@ -652,7 +703,7 @@ function! s:SetFontFavorite()
         call <SID>RandomFontFavorite()
     endif
 endfunction
-" END SetFavorite }}}
+" END SetFontFavorite }}}
 
 " s:RandomFontFavorite() {{{
 " Function that randomnly chooses a favorite font for the selected filetype or
@@ -677,7 +728,7 @@ function! s:RandomFontFavorite()
     endif
     return 0
 endfunction
-" END RandomFavorite }}}
+" END RandomFontFavorite }}}
 
 " s:AddFontFavorite() {{{
 " Add current font to the favorites list. Doesn't add duplicates.
@@ -803,6 +854,44 @@ function! s:CycleFontGlobalFavorites(step)
     call <SID>CycleFontFileFavorites(a:step, 1)
 endfunction
 " END CycleFontGlobalFavorites() }}}
+
+" s:MakeGuiMenu() {{{
+function! s:MakeGuiMenu()
+    :anoremenu Favorites.Browse\ Colorschemes.Next :call <SID>CycleAll(1)<CR>
+    :anoremenu Favorites.Browse\ Colorschemes.Previous :call <SID>CycleAll(-1)<CR>
+
+    if g:ulti_color_filetype
+        :anoremenu Favorites.Favorite\ Colorschemes.Next\ Filetype-Specific :call <SID>CycleFileFavorites(1)<CR>
+        :anoremenu Favorites.Favorite\ Colorschemes.Previous\ Filetype-Specific :call <SID>CycleFileFavorites(-1)<CR>
+    endif
+    :anoremenu Favorites.Favorite\ Colorschemes.Next\ Global :call <SID>CycleGlobalFavorites(1)<CR>
+    :anoremenu Favorites.Favorite\ Colorschemes.Previous\ Global :call <SID>CycleGlobalFavorites(-1)<CR>
+    :menu Favorites.Favorite\ Colorschemes.-Colorscheme- :
+    :anoremenu Favorites.Favorite\ Colorschemes.Add\ to\ Favorites :call <SID>AddFavorite()<CR>
+    :anoremenu Favorites.Favorite\ Colorschemes.Remove\ from\ Favorites :call <SID>RemoveFavorite()<CR>
+
+    if g:ulti_color_font_enable
+        if g:ulti_color_filetype
+            :anoremenu Favorites.Favorite\ Fonts.Next\ Filetype-Specific :call <SID>CycleFontFileFavorites(1)<CR>
+            :anoremenu Favorites.Favorite\ Fonts.Previous\ Filetype-Specific :call <SID>CycleFontFileFavorites(-1)<CR>
+        endif
+        :anoremenu Favorites.Favorite\ Fonts.Next\ Global :call <SID>CycleFontGlobalFavorites(1)<CR>
+        :anoremenu Favorites.Favorite\ Fonts.Previous\ Global :call <SID>CycleFontGlobalFavorites(-1)<CR>
+        :menu Favorites.Favorite\ Fonts.-Font- :
+        :anoremenu Favorites.Favorite\ Fonts.Add\ Font\ to\ Favorites :call <SID>AddFontFavorite()<CR>
+        :anoremenu Favorites.Favorite\ Fonts.Remove\ Font\ from\ Favorites :call <SID>RemoveFontFavorite()<CR>
+    endif
+
+    :anoremenu Favorites.Manual\ Save/Load.Load\ Colorscheme\ Favorites<Tab>(done automatically) :call <SID>LoadFavorites()<CR>
+    :anoremenu Favorites.Manual\ Save/Load.Save\ Colorscheme\ Favorites<Tab>(done automatically) :call <SID>WriteFavorites()<CR>
+    :anoremenu Favorites.Manual\ Save/Load.Load\ Font\ Favorites<Tab>(done automatically) :call <SID>LoadFontFavorites()<CR>
+    :anoremenu Favorites.Manual\ Save/Load.Save\ Font\ Favorites<Tab>(done automatically) :call <SID>WriteFontFavorites()<CR>
+    :menu Favorites.-Read/Write- :
+
+    :anoremenu Favorites.See\ Favorites :call <SID>SeeFavorites()<CR>
+endfunction
+
+" END MakeGuiMenu }}}
 " END Script Functions }}}
 
 " Auto Commands {{{
@@ -810,8 +899,13 @@ endfunction
 call <SID>GetAllColors()
 if g:ulti_color_auto_load
     call <SID>LoadFavorites()
-    if has('gui_running') && g:ulti_color_font_enable
-        call <SID>LoadFontFavorites()
+    if has('gui_running')
+        if g:ulti_color_font_enable
+            call <SID>LoadFontFavorites()
+        endif
+        if g:ulti_color_gui_menu
+            call <SID>MakeGuiMenu()
+        endif
     endif
 endif
 " END Automatic calls }}}
@@ -829,13 +923,22 @@ augroup END
 " END Automatic called on quit }}}
 
 " Automatically called on buffer enter {{{
-" Used for automatic colorscheme choosing
+" Used for automatic colorscheme choosing,
+" A setting of 1 means Random is called everytime.
+" A setting of 2 means Random is called when changing filetypes.
+" A setting of 0 means Random is called only if the current scheme isn't in 
+" the favorites list for the specific filetype.
 augroup UltiVimAutoScheme
     autocmd!
-    if g:ulti_color_always_random
+    if g:ulti_color_always_random == 1
         autocmd BufEnter * call <SID>RandomFavorite()
         if has('gui_running') && g:ulti_color_font_enable
             autocmd BufEnter * call <SID>RandomFontFavorite()
+        endif
+    elseif g:ulti_color_always_random == 2
+        autocmd BufEnter * call <SID>SituationalRandomFavorite()
+        if has('gui_running') && g:ulti_color_font_enable
+            autocmd BufEnter * call <SID>SetFontFavorite()
         endif
     else
         autocmd BufEnter * call <SID>SetFavorite()
